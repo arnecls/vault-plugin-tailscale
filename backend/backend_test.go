@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tailscale/tailscale-client-go/tailscale"
 
-	"github.com/davidsbond/vault-plugin-tailscale/backend"
+	"github.com/arnecls/vault-plugin-tailscale/backend"
 )
 
 func TestBackend_GenerateKey(t *testing.T) {

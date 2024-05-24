@@ -12,7 +12,7 @@ import (
 )
 
 // PluginVersion is set via "-X 'backend.PluginVersion=x.y.z'" during the build process.
-var PluginVersion = "0.0.0"
+var PluginVersion = "v0.0.0"
 
 type (
 	// The Backend type is responsible for handling inbound requests from Vault to serve Tailscale authentication

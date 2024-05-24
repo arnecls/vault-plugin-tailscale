@@ -1,4 +1,4 @@
-module github.com/davidsbond/vault-plugin-tailscale
+module github.com/arnecls/vault-plugin-tailscale
 
 go 1.22.0
 
@@ -62,8 +62,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
-	github.com/tailscale/hujson v0.0.0-20220506213045-af5ed07155e5 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
+	github.com/tailscale/hujson v0.0.0-20220630195928-54599719472f // indirect
+	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
