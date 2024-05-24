@@ -12,19 +12,19 @@ A [HashiCorp Vault](https://www.vaultproject.io/) plugin for generating device a
 1. Download the binary for your architecture from the [releases](https://github.com/davidsbond/vault-plugin-tailscale/releases) page
 2. Generate the SHA256 sum of the plugin binary
 
-```shell
+```bash
 SHASUM=$(sha256sum vault-plugin-tailscale | cut -d ' ' -f1)
 ```
 
 3. Add the plugin to your Vault plugin catalog (requires VAULT_TOKEN to be set)
 
-```shell
+```bash
 vault plugin register -sha256="${SHASUM}" secret vault-plugin-tailscale
 ```
 
 4. Mount the plugin
 
-```shell
+```bash
 vault secrets enable -path=tailscale vault-plugin-tailscale 
 ```
 
@@ -35,17 +35,18 @@ vault secrets enable -path=tailscale vault-plugin-tailscale
 3. Create the Vault configuration for the Tailscale API
    
 
-```shell
-# Authenticate through an API Keu
+```bash
+# Authenticate through an API Key
 vault write tailscale/config \
 tailnet="${TAILNET}" \
 api_key="${API_KEY}"
 ```
 
-```shell
+```bash
 # Or use oauth client credentials
 # Make sure to change the api_url!
-vault write tailscale/config tailnet="${TAILNET}" \
+vault write tailscale/config \
+tailnet="${TAILNET}" \
 oauth_client_id="${OAUTH_CLIENT_ID}" \
 oauth_client_secret="${OAUTH_CLIENT_SECRET}" \
 api_url='https://api.tailscale.com/api/v2/oauth/token'
@@ -55,7 +56,7 @@ api_url='https://api.tailscale.com/api/v2/oauth/token'
 
 Generate keys using the Vault CLI.
 
-```shell
+```bash
 $ vault read tailscale/key
 Key          Value
 ---          -----
@@ -75,7 +76,7 @@ The following key/value pairs can be added to the end of the `vault read` comman
 
 Tags to apply to the device that uses the authentication key
 
-```shell
+```bash
 vault read tailscale/key tags=something:somewhere
 ```
 
@@ -83,7 +84,7 @@ vault read tailscale/key tags=something:somewhere
 
 If true, machines added to the tailnet with this key will not required authorization
 
-```shell
+```bash
 vault read tailscale/key preauthorized=true
 ```
 
@@ -91,6 +92,6 @@ vault read tailscale/key preauthorized=true
 
 If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet
 
-```shell
+```bash
 vault read tailscale/key ephemeral=true
 ```
