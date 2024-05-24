@@ -8,6 +8,7 @@ builds:
       - -trimpath
     ldflags:
       - "-s -w"
+      - "-X \"backend.PluginVersion={{ .Version }}\""
     goos:
       - freebsd
       - windows

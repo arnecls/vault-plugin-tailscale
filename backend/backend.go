@@ -11,6 +11,9 @@ import (
 	"github.com/tailscale/tailscale-client-go/tailscale"
 )
 
+// PluginVersion is set via "-X 'backend.PluginVersion=x.y.z'" during the build process.
+var PluginVersion = "0.0.0"
+
 type (
 	// The Backend type is responsible for handling inbound requests from Vault to serve Tailscale authentication
 	// keys.
@@ -49,8 +52,9 @@ const (
 func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend, error) {
 	backend := &Backend{}
 	backend.Backend = &framework.Backend{
-		BackendType: logical.TypeLogical,
-		Help:        backendHelp,
+		BackendType:    logical.TypeLogical,
+		RunningVersion: PluginVersion,
+		Help:           backendHelp,
 		Paths: []*framework.Path{
 			{
 				Pattern: "key",
