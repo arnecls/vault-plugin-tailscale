@@ -13,25 +13,22 @@ A [HashiCorp Vault](https://www.vaultproject.io/) plugin for generating device a
 2. Generate the SHA256 sum of the plugin binary
 
 ```shell
-$ sha256sum vault-plugin-tailscale | cut -d ' ' -f1
-d6ffe79b13326eb472af0b670c694f21f779d524068ad705a672a00f6d433724
+SHASUM=$(sha256sum vault-plugin-tailscale | cut -d ' ' -f1)
 ```
 
-3. Add the plugin to your Vault plugin catalog
+3. Add the plugin to your Vault plugin catalog (requires VAULT_TOKEN to be set)
 
 ```shell
-$ vault plugin register -sha256=d6ffe79b13326eb472af0b670c694f21f779d524068ad705a672a00f6d433724 secret vault-plugin-tailscale
-Success! Registered plugin: vault-plugin-tailscale
+vault plugin register -sha256="${SHASUM}" secret vault-plugin-tailscale
 ```
 
-4. Enable the plugin
+4. Mount the plugin
 
 ```shell
-$ vault secrets enable -path=tailscale vault-plugin-tailscale 
-Success! Enabled the vault-plugin-tailscale secrets engine at: tailscale/
+vault secrets enable -path=tailscale vault-plugin-tailscale 
 ```
 
-## Usage
+## Configuration
 
 1. The ID of your tailnet is displayed on the top left of your admin console (your org name)
 2. Obtain an API key or Oauth client credentials ("all" scope) from the Tailscale admin dashboard.
@@ -40,18 +37,23 @@ Success! Enabled the vault-plugin-tailscale secrets engine at: tailscale/
 
 ```shell
 # Authenticate through an API Keu
-$ vault write tailscale/config tailnet=$TAILNET api_key=$API_KEY
-Success! Data written to: tailscale/config
+vault write tailscale/config \
+tailnet="${TAILNET}" \
+api_key="${API_KEY}"
 ```
 
 ```shell
 # Or use oauth client credentials
 # Make sure to change the api_url!
-$ vault write tailscale/config tailnet=$TAILNET oauth_client_id=$OAUTH_CLIENT_ID oauth_client_secret=$OAUTH_CLIENT_SECRET api_url='https://api.tailscale.com/api/v2/oauth/token'
-Success! Data written to: tailscale/config
+vault write tailscale/config tailnet="${TAILNET}" \
+oauth_client_id="${OAUTH_CLIENT_ID}" \
+oauth_client_secret="${OAUTH_CLIENT_SECRET}" \
+api_url='https://api.tailscale.com/api/v2/oauth/token'
 ```
 
-3. Generate keys using the Vault CLI.
+## Usage
+
+Generate keys using the Vault CLI.
 
 ```shell
 $ vault read tailscale/key
@@ -73,7 +75,7 @@ The following key/value pairs can be added to the end of the `vault read` comman
 
 Tags to apply to the device that uses the authentication key
 
-```
+```shell
 vault read tailscale/key tags=something:somewhere
 ```
 
@@ -81,7 +83,7 @@ vault read tailscale/key tags=something:somewhere
 
 If true, machines added to the tailnet with this key will not required authorization
 
-```
+```shell
 vault read tailscale/key preauthorized=true
 ```
 
@@ -89,6 +91,6 @@ vault read tailscale/key preauthorized=true
 
 If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet
 
-```
+```shell
 vault read tailscale/key ephemeral=true
 ```
