@@ -109,7 +109,7 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 					"oauth_scopes": {
 						Type:        framework.TypeCommaStringSlice,
 						Description: oauthScopesDescription,
-						Default:     []string{"devices"},
+						Default:     []string{"all"},
 					},
 				},
 				Operations: map[logical.Operation]framework.OperationHandler{
@@ -151,9 +151,6 @@ func (b *Backend) GenerateKey(ctx context.Context, request *logical.Request, dat
 	}
 
 	if len(config.APIKey) == 0 {
-		if len(config.OAuthClientID) == 0 || len(config.OAuthClientSecret) == 0 {
-			return nil, errors.New("either an API key or OAuth client credentials (client id and secret) must be provided")
-		}
 		clientOpts = append(clientOpts, tailscale.WithOAuthClientCredentials(config.OAuthClientID, config.OAuthClientSecret, config.OAuthScopes))
 	}
 
