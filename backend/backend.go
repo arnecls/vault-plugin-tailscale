@@ -20,9 +20,12 @@ type (
 
 	// The Config type describes the configuration fields used by the Backend
 	Config struct {
-		Tailnet string `json:"tailnet"`
-		APIKey  string `json:"api_key"`
-		APIUrl  string `json:"api_url"`
+		Tailnet           string   `json:"tailnet"`
+		APIKey            string   `json:"api_key"`
+		APIUrl            string   `json:"api_url"`
+		OAuthClientID     string   `json:"oauth_client_id"`
+		OAuthClientSecret string   `json:"oauth_client_secret"`
+		OAuthScopes       []string `json:"oauth_scopes"`
 	}
 )
 
@@ -31,12 +34,15 @@ const (
 	readKeyDescription       = "Generate a single-use authentication key for a device"
 	readConfigDescription    = "Read the current Tailscale backend configuration"
 	updateConfigDescription  = "Update the Tailscale backend configuration"
-	apiKeyDescription        = "The API key to use for authenticating with the Tailscale API"
+	apiKeyDescription        = "The API key to use for authenticating with the Tailscale API. A key takes precedence over OAuth client credentials"
 	tailnetDescription       = "The name of the Tailscale Tailnet"
 	tagsDescription          = "Tags to apply to the device that uses the authentication key"
 	preauthorizedDescription = "If true, machines added to the tailnet with this key will not required authorization"
 	apiUrlDescription        = "The URL of the Tailscale API"
 	ephemeralDescription     = "If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet"
+	oauthClientDescription   = "The OAuth client ID to use for authenticating with the Tailscale API. Ignored if an API key is provided"
+	oauthSecretDescription   = "The OAuth client secret to use for authenticating with the Tailscale API. Ignored if an API key is provided"
+	oauthScopesDescription   = "A comma separated list of OAuth scopes to request when authenticating with the Tailscale API. Must match the scopes configured for the used credentials"
 )
 
 // Create a new logical.Backend implementation that can generate authentication keys for Tailscale devices.
@@ -85,6 +91,19 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 						Description: apiUrlDescription,
 						Default:     "https://api.tailscale.com",
 					},
+					"oauth_client_id": {
+						Type:        framework.TypeString,
+						Description: oauthClientDescription,
+					},
+					"oauth_client_secret": {
+						Type:        framework.TypeString,
+						Description: oauthSecretDescription,
+					},
+					"oauth_scopes": {
+						Type:        framework.TypeCommaStringSlice,
+						Description: oauthScopesDescription,
+						Default:     []string{"devices"},
+					},
 				},
 				Operations: map[logical.Operation]framework.OperationHandler{
 					logical.ReadOperation: &framework.PathOperation{
@@ -120,7 +139,18 @@ func (b *Backend) GenerateKey(ctx context.Context, request *logical.Request, dat
 		return nil, err
 	}
 
-	client, err := tailscale.NewClient(config.APIKey, config.Tailnet, tailscale.WithBaseURL(config.APIUrl))
+	clientOpts := []tailscale.ClientOption{
+		tailscale.WithBaseURL(config.APIUrl),
+	}
+
+	if len(config.APIKey) == 0 {
+		if len(config.OAuthClientID) == 0 || len(config.OAuthClientSecret) == 0 {
+			return nil, errors.New("either an API key or OAuth client credentials (client id and secret) must be provided")
+		}
+		clientOpts = append(clientOpts, tailscale.WithOAuthClientCredentials(config.OAuthClientID, config.OAuthClientSecret, config.OAuthScopes))
+	}
+
+	client, err := tailscale.NewClient(config.APIKey, config.Tailnet, clientOpts...)
 	if err != nil {
 		return nil, err
 	}

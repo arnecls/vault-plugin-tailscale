@@ -33,11 +33,18 @@ Success! Enabled the vault-plugin-tailscale secrets engine at: tailscale/
 
 ## Usage
 
-1. Obtain an API key from the Tailscale admin dashboard.
+1. Obtain an API key or Oauth client credentials from the Tailscale admin dashboard.
 2. Create the Vault configuration for the Tailscale API
 
 ```shell
+# Authenticate through an API Keu
 $ vault write tailscale/config tailnet=$TAILNET api_key=$API_KEY
+Success! Data written to: tailscale/config
+```
+
+```shell
+# Or use oauth client credentials
+$ vault write tailscale/config tailnet=$TAILNET oauth_client_id=$OAUTH_CLIENT_ID oauth_client_secret=$OAUTH_CLIENT_SECRET
 Success! Data written to: tailscale/config
 ```
 
