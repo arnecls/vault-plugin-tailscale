@@ -1,4 +1,4 @@
-module github.com/arnecls/vault-plugin-tailscale
+module vault-plugin-tailscale
 
 go 1.22.0
 

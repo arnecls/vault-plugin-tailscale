@@ -212,16 +212,18 @@ func (b *Backend) ReadConfiguration(ctx context.Context, request *logical.Reques
 // UpdateConfiguration modifies the Backend configuration. Returns an error if any required fields are missing.
 func (b *Backend) UpdateConfiguration(ctx context.Context, request *logical.Request, data *framework.FieldData) (*logical.Response, error) {
 	config := Config{
-		Tailnet: data.Get("tailnet").(string),
-		APIKey:  data.Get("api_key").(string),
-		APIUrl:  data.Get("api_url").(string),
+		Tailnet:           data.Get("tailnet").(string),
+		APIKey:            data.Get("api_key").(string),
+		APIUrl:            data.Get("api_url").(string),
+		OAuthClientID:     data.Get("oauth_client_id").(string),
+		OAuthClientSecret: data.Get("oauth_client_secret").(string),
 	}
 
 	switch {
 	case config.Tailnet == "":
 		return nil, errors.New("provided tailnet cannot be empty")
-	case config.APIKey == "":
-		return nil, errors.New("provided api_key cannot be empty")
+	case config.APIKey == "" && config.OAuthClientID == "" && config.OAuthClientSecret == "":
+		return nil, errors.New("must either provide a non-empty api_key or a non-empty oauth_client_id and oauth_client_secret")
 	case config.APIUrl == "":
 		return nil, errors.New("provided api_url cannot be empty")
 	}

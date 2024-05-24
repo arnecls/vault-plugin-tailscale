@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/plugin"
 
-	"github.com/arnecls/vault-plugin-tailscale/backend"
+	"vault-plugin-tailscale/backend"
 )
 
 func main() {
