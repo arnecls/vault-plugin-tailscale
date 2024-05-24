@@ -202,9 +202,12 @@ func (b *Backend) ReadConfiguration(ctx context.Context, request *logical.Reques
 
 	return &logical.Response{
 		Data: map[string]interface{}{
-			"tailnet": config.Tailnet,
-			"api_key": config.APIKey,
-			"api_url": config.APIUrl,
+			"tailnet":             config.Tailnet,
+			"api_key":             config.APIKey,
+			"api_url":             config.APIUrl,
+			"oauth_client_id":     config.OAuthClientID,
+			"oauth_client_secret": config.OAuthClientSecret,
+			"oauth_scopes":        config.OAuthScopes,
 		},
 	}, nil
 }
@@ -217,6 +220,7 @@ func (b *Backend) UpdateConfiguration(ctx context.Context, request *logical.Requ
 		APIUrl:            data.Get("api_url").(string),
 		OAuthClientID:     data.Get("oauth_client_id").(string),
 		OAuthClientSecret: data.Get("oauth_client_secret").(string),
+		OAuthScopes:       data.Get("oauth_scopes").([]string),
 	}
 
 	switch {
