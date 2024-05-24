@@ -81,6 +81,7 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 					"api_key": {
 						Type:        framework.TypeString,
 						Description: apiKeyDescription,
+						Default:     "",
 					},
 					"tailnet": {
 						Type:        framework.TypeString,
@@ -94,10 +95,12 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 					"oauth_client_id": {
 						Type:        framework.TypeString,
 						Description: oauthClientDescription,
+						Default:     "",
 					},
 					"oauth_client_secret": {
 						Type:        framework.TypeString,
 						Description: oauthSecretDescription,
+						Default:     "",
 					},
 					"oauth_scopes": {
 						Type:        framework.TypeCommaStringSlice,
