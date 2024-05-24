@@ -1,5 +1,8 @@
 .DEFAULT_GOAL := build
 
+release:
+	GITHUB_TOKEN=$(gh auth token) goreleaser release --clean
+
 snapshot:
 	goreleaser release --snapshot --rm-dist
 
