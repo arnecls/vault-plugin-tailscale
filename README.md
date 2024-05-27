@@ -31,7 +31,7 @@ vault secrets enable -path=tailscale vault-plugin-tailscale
 ## Configuration
 
 1. The ID of your tailnet is displayed on the top left of your admin console (your org name)
-2. Obtain an API key or Oauth client credentials ("all" scope) from the Tailscale admin dashboard.
+2. Obtain an API key or Oauth client credentials ("devices" scope) from the Tailscale admin dashboard.
 3. Create the Vault configuration for the Tailscale API
    
 
@@ -57,15 +57,20 @@ api_url='https://api.tailscale.com/api/v2/oauth/token'
 Generate keys using the Vault CLI.
 
 ```bash
-$ vault read tailscale/key
+vault read tailscale/key
+```
+
+This will yield the following output:
+
+```
 Key          Value
 ---          -----
 ephemeral    false
-expires      2022-04-30T00:32:36Z
+expires      2024-08-30T00:00:00Z
 id           kMxzN47CNTRL
-key          secret-key-data
+key          ....
 reusable     false
-tags         <nil>
+tags         
 ```
 
 ### Key Options
@@ -74,15 +79,16 @@ The following key/value pairs can be added to the end of the `vault read` comman
 
 #### Tags
 
-Tags to apply to the device that uses the authentication key
+A comma separated list of tags to apply to the device that uses the authentication key.
+Keys _must_ have a tag set. You can assign default tags to an oauth client on credential creation though.
 
 ```bash
-vault read tailscale/key tags=something:somewhere
+vault read tailscale/key tags='tag:foo,tag:bar'
 ```
 
 #### Preauthorized
 
-If true, machines added to the tailnet with this key will not required authorization
+If true, machines added to the tailnet with this key will not required authorization.
 
 ```bash
 vault read tailscale/key preauthorized=true
@@ -90,8 +96,26 @@ vault read tailscale/key preauthorized=true
 
 #### Ephemeral
 
-If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet
+If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet.
 
 ```bash
 vault read tailscale/key ephemeral=true
+```
+
+#### Reusable
+
+If true, the key can be reused for different nodes/devices.
+This is useful if you're dealing with ephemeral VMs or pods.
+
+```bash
+vault read tailscale/key reusable=true
+```
+
+#### lifetime
+
+By default the lifetime of a generated key is `90d`. You can set a shorter liftime if needed.
+Durations can be set using the standard golang duration notation, or in seconds when setting a plain number.
+
+```bash
+vault read tailscale/key lifetime='24h'
 ```

@@ -5,6 +5,7 @@ package backend
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
@@ -37,15 +38,17 @@ const (
 	readKeyDescription       = "Generate a single-use authentication key for a device"
 	readConfigDescription    = "Read the current Tailscale backend configuration"
 	updateConfigDescription  = "Update the Tailscale backend configuration"
-	apiKeyDescription        = "The API key to use for authenticating with the Tailscale API. A key takes precedence over OAuth client credentials"
+	apiKeyDescription        = "The API key to use for authenticating with the Tailscale API. Ignored if OAuth credentials are provided."
 	tailnetDescription       = "The name of the Tailscale Tailnet"
 	tagsDescription          = "Tags to apply to the device that uses the authentication key"
 	preauthorizedDescription = "If true, machines added to the tailnet with this key will not required authorization"
 	apiUrlDescription        = "The URL of the Tailscale API"
 	ephemeralDescription     = "If true, nodes created with this key will be removed after a period of inactivity or when they disconnect from the Tailnet"
-	oauthClientDescription   = "The OAuth client ID to use for authenticating with the Tailscale API. Ignored if an API key is provided"
-	oauthSecretDescription   = "The OAuth client secret to use for authenticating with the Tailscale API. Ignored if an API key is provided"
+	oauthClientDescription   = "The OAuth client ID to use for authenticating with the Tailscale API."
+	oauthSecretDescription   = "The OAuth client secret to use for authenticating with the Tailscale API."
 	oauthScopesDescription   = "A comma separated list of OAuth scopes to request when authenticating with the Tailscale API. Must match the scopes configured for the used credentials"
+	reusableDescription      = "If true, the key can be used for multiple, different devices"
+	lifetimeSecDescription   = "The key lifetime in seconds or as a valid go duration string. Defaults to 90 days"
 )
 
 // Create a new logical.Backend implementation that can generate authentication keys for Tailscale devices.
@@ -60,16 +63,28 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 				Pattern: "key",
 				Fields: map[string]*framework.FieldSchema{
 					"tags": {
-						Type:        framework.TypeStringSlice,
+						Type:        framework.TypeCommaStringSlice,
 						Description: tagsDescription,
 					},
 					"preauthorized": {
 						Type:        framework.TypeBool,
 						Description: preauthorizedDescription,
+						Default:     false,
 					},
 					"ephemeral": {
 						Type:        framework.TypeBool,
 						Description: ephemeralDescription,
+						Default:     false,
+					},
+					"reusable": {
+						Type:        framework.TypeBool,
+						Description: reusableDescription,
+						Default:     false,
+					},
+					"lifetime": {
+						Type:        framework.TypeSignedDurationSecond,
+						Description: lifetimeSecDescription,
+						Default:     time.Hour * 24 * 90,
 					},
 				},
 				Operations: map[logical.Operation]framework.OperationHandler{
@@ -109,7 +124,7 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 					"oauth_scopes": {
 						Type:        framework.TypeCommaStringSlice,
 						Description: oauthScopesDescription,
-						Default:     []string{"all"},
+						Default:     []string{"devices"},
 					},
 				},
 				Operations: map[logical.Operation]framework.OperationHandler{
@@ -150,8 +165,11 @@ func (b *Backend) GenerateKey(ctx context.Context, request *logical.Request, dat
 		tailscale.WithBaseURL(config.APIUrl),
 	}
 
-	if len(config.APIKey) == 0 {
+	if config.OAuthClientID != "" {
+		b.Logger().Debug("Using oauth client credentials for authentication")
 		clientOpts = append(clientOpts, tailscale.WithOAuthClientCredentials(config.OAuthClientID, config.OAuthClientSecret, config.OAuthScopes))
+	} else {
+		b.Logger().Debug("Using auth-key for authentication")
 	}
 
 	client, err := tailscale.NewClient(config.APIKey, config.Tailnet, clientOpts...)
@@ -163,8 +181,11 @@ func (b *Backend) GenerateKey(ctx context.Context, request *logical.Request, dat
 	capabilities.Devices.Create.Tags = data.Get("tags").([]string)
 	capabilities.Devices.Create.Preauthorized = data.Get("preauthorized").(bool)
 	capabilities.Devices.Create.Ephemeral = data.Get("ephemeral").(bool)
+	capabilities.Devices.Create.Reusable = data.Get("reusable").(bool)
 
-	key, err := client.CreateKey(ctx, capabilities)
+	lifetime := data.Get("lifetime").(time.Duration)
+
+	key, err := client.CreateKey(ctx, capabilities, tailscale.WithKeyExpiry(lifetime))
 	if err != nil {
 		return nil, err
 	}
