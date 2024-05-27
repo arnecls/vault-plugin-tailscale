@@ -114,7 +114,7 @@ vault read tailscale/key reusable=true
 #### lifetime
 
 By default the lifetime of a generated key is `90d`. You can set a shorter liftime if needed.
-Durations can be set using the standard golang duration notation, or in seconds when setting a plain number.
+Durations can be set using the standard [golang duration notation](https://pkg.go.dev/maze.io/x/duration#ParseDuration).
 
 ```bash
 vault read tailscale/key lifetime='24h'

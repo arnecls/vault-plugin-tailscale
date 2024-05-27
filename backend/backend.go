@@ -48,7 +48,7 @@ const (
 	oauthSecretDescription   = "The OAuth client secret to use for authenticating with the Tailscale API."
 	oauthScopesDescription   = "A comma separated list of OAuth scopes to request when authenticating with the Tailscale API. Must match the scopes configured for the used credentials"
 	reusableDescription      = "If true, the key can be used for multiple, different devices"
-	lifetimeSecDescription   = "The key lifetime in seconds or as a valid go duration string. Defaults to 90 days"
+	lifetimeSecDescription   = "The key lifetime in seconds or as a valid go duration string (>= 1s). Defaults to 90 days"
 )
 
 // Create a new logical.Backend implementation that can generate authentication keys for Tailscale devices.
@@ -82,9 +82,9 @@ func Create(ctx context.Context, config *logical.BackendConfig) (logical.Backend
 						Default:     false,
 					},
 					"lifetime": {
-						Type:        framework.TypeSignedDurationSecond,
+						Type:        framework.TypeDurationSecond,
 						Description: lifetimeSecDescription,
-						Default:     time.Hour * 24 * 90,
+						Default:     "90d",
 					},
 				},
 				Operations: map[logical.Operation]framework.OperationHandler{
@@ -183,7 +183,15 @@ func (b *Backend) GenerateKey(ctx context.Context, request *logical.Request, dat
 	capabilities.Devices.Create.Ephemeral = data.Get("ephemeral").(bool)
 	capabilities.Devices.Create.Reusable = data.Get("reusable").(bool)
 
-	lifetime := data.Get("lifetime").(time.Duration)
+	lifetimeSec, isLifetimeSet, err := data.GetOkErr("lifetime")
+
+	if !isLifetimeSet {
+		lifetimeSec = data.GetDefaultOrZero("lifetime")
+	} else if err != nil {
+		return nil, err // likely a parsing error
+	}
+
+	lifetime := time.Duration(lifetimeSec.(int)) * time.Second
 
 	key, err := client.CreateKey(ctx, capabilities, tailscale.WithKeyExpiry(lifetime))
 	if err != nil {
