@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/tailscale/tailscale-client-go/tailscale"
 )
@@ -24,7 +25,7 @@ func main() {
 
 	clientOpts := []tailscale.ClientOption{
 		tailscale.WithBaseURL("https://api.tailscale.com"),
-		tailscale.WithOAuthClientCredentials(clientID, clientSecret, []string{"all"}),
+		tailscale.WithOAuthClientCredentials(clientID, clientSecret, []string{"devices"}),
 	}
 
 	client, err := tailscale.NewClient("", org, clientOpts...)
@@ -33,7 +34,7 @@ func main() {
 	}
 
 	var capabilities tailscale.KeyCapabilities
-	capabilities.Devices.Create.Tags = []string{tag}
+	capabilities.Devices.Create.Tags = strings.Split(tag, ",")
 	capabilities.Devices.Create.Preauthorized = false
 	capabilities.Devices.Create.Ephemeral = true
 
