@@ -25,7 +25,7 @@ func run(logger hclog.Logger) error {
 		return err
 	}
 
-	return plugin.Serve(&plugin.ServeOpts{
+	return plugin.ServeMultiplex(&plugin.ServeOpts{
 		TLSProviderFunc:    api.VaultPluginTLSProvider(meta.GetTLSConfig()),
 		BackendFactoryFunc: backend.Create,
 		Logger:             logger,
