@@ -2,4 +2,6 @@ dist/
 bin/
 vault-plugin-tailscale
 
+cmd/oauth_test/oauth_test
+
 .direnv
