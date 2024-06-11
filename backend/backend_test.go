@@ -21,13 +21,19 @@ func TestBackend_GenerateKey(t *testing.T) {
 
 	requestSchema := map[string]*framework.FieldSchema{
 		"tags": {
-			Type: framework.TypeStringSlice,
+			Type: framework.TypeCommaStringSlice,
 		},
 		"preauthorized": {
 			Type: framework.TypeBool,
 		},
 		"ephemeral": {
 			Type: framework.TypeBool,
+		},
+		"reusable": {
+			Type: framework.TypeBool,
+		},
+		"lifetime": {
+			Type: framework.TypeDurationSecond,
 		},
 	}
 
@@ -104,14 +110,20 @@ func TestBackend_ReadConfiguration(t *testing.T) {
 			Name:    "It should read the backend configuration",
 			Request: logical.TestRequest(t, logical.ReadOperation, "config"),
 			Config: &backend.Config{
-				Tailnet: "example.com",
-				APIKey:  "1234",
-				APIUrl:  "example.com",
+				Tailnet:           "example.com",
+				APIKey:            "1234",
+				APIUrl:            "api.tailscale.com",
+				OAuthClientID:     "client_id",
+				OAuthClientSecret: "client_secret",
+				OAuthScopes:       []string{"devices"},
 			},
 			Expected: map[string]interface{}{
-				"tailnet": "example.com",
-				"api_key": "1234",
-				"api_url": "example.com",
+				"tailnet":             "example.com",
+				"api_key":             "1234",
+				"api_url":             "api.tailscale.com",
+				"oauth_client_id":     "client_id",
+				"oauth_client_secret": "client_secret",
+				"oauth_scopes":        []string{"devices"},
 			},
 		},
 		{
@@ -156,6 +168,15 @@ func TestBackend_UpdateConfiguration(t *testing.T) {
 			Type:    framework.TypeString,
 			Default: "https://api.tailscale.com",
 		},
+		"oauth_client_id": {
+			Type: framework.TypeString,
+		},
+		"oauth_client_secret": {
+			Type: framework.TypeString,
+		},
+		"oauth_scopes": {
+			Type: framework.TypeCommaStringSlice,
+		},
 	}
 
 	tt := []struct {
@@ -176,9 +197,12 @@ func TestBackend_UpdateConfiguration(t *testing.T) {
 				},
 			},
 			Expected: backend.Config{
-				Tailnet: "example.com",
-				APIKey:  "12345",
-				APIUrl:  "https://api.tailscale.com",
+				Tailnet:           "example.com",
+				APIKey:            "12345",
+				APIUrl:            "https://api.tailscale.com",
+				OAuthClientID:     "",
+				OAuthClientSecret: "",
+				OAuthScopes:       []string{},
 			},
 		},
 		{
