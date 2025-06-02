@@ -48,7 +48,7 @@
           rev = self.rev or "dirty";
           ver = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
           date = self.lastModifiedDate or "19700101";
-          go = pkgs.go_1_22;
+          go = pkgs.go_1_24;
         in
         rec
         {

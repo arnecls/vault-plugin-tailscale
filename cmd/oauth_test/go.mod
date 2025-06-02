@@ -1,6 +1,6 @@
 module oauth_test
 
-go 1.22.3
+go 1.24.2
 
 require github.com/tailscale/tailscale-client-go v1.17.0
 
